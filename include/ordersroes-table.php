@@ -10,10 +10,9 @@ class OrdersRoes_Table extends WP_List_Table {
 	{
 		$columns = array(
 			'name' => 'Order Name',
-			'date' => 'Date',
 			'status' => 'Order Status',
-			'status_description' => 'Status Description',
-			'customer'   => 'Customer'
+			'customer'   => 'Customer',
+			'date' => 'Date'
 		);
 		return $columns;
 	}

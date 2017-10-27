@@ -1,7 +1,10 @@
 <?php
 
+if (isset($_GET['oroesaction']) && $_GET['oroesaction'] == 'send-orders') {
+	OrdersRoes::send_orders();
+}
+
 $orders = OrdersRoes::get_orders();
-// die(var_dump($orders));
 
 ?>
 
@@ -13,4 +16,12 @@ $orders_table = new OrdersRoes_Table();
 $orders_table->prepare_items($orders);
 $orders_table->display();
 
+printf(
+	'<a href="%s" class="button button-primary">%s</a>',
+	admin_url('admin.php?page=ordersroes&oroesaction=send-orders'),
+	__('Send Pending Orders', 'lingotek-translation')
+);
+
 ?>
+
+

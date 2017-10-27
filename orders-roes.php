@@ -40,7 +40,7 @@ class OrdersRoes {
 
 	public function init()
 	{
-		//
+		register_taxonomy('orderroes_status', 'sunshine-order');
 	}
 
 	public function autoload($class)
@@ -102,17 +102,23 @@ class OrdersRoes {
 		$orders = get_posts($args);
 		foreach ($orders as $order) {
 			$filtered_order = array();
-			$order_meta = get_post_meta($order->ID);
 			$order_data = maybe_unserialize(get_post_meta($order->ID, '_sunshine_order_data', true));
 			$order_items = maybe_unserialize(get_post_meta($order->ID, '_sunshine_order_items', true));
-			$order_terms = wp_get_post_terms($order->ID, 'sunshine-order-status');
+			// wp_set_post_terms($order->ID, array('name' => 'Complete'), 'orderroes_status');
+
+			if (empty(wp_get_post_terms($order->ID, 'orderroes_status'))) {
+				wp_set_post_terms($order->ID, array('name' => 'Pending'), 'orderroes_status');
+				$order_status = wp_get_post_terms($order->ID, 'orderroes_status');
+			}
+			else {
+				$order_status = wp_get_post_terms($order->ID, 'orderroes_status');
+			}
 
 			$filtered_order = array(
 				'id' => $order->ID,
 				'name' => $order->post_title,
 				'date' => $order->post_date,
-				'status' => $order_terms[0]->name,
-				'status_description' => $order_terms[0]->description,
+				'status' => $order_status[0]->name,
 				'customer' => $order_data['first_name'] . ' ' . $order_data['last_name']
 			);
 
@@ -120,6 +126,60 @@ class OrdersRoes {
 		}
 
 		return $filtered_orders;
+	}
+
+	public static function send_orders()
+	{
+		$args = array(
+			'post_type' => 'sunshine-order'
+		);
+		$orders = get_posts($args);
+
+		foreach ($orders as $order) {
+			$order_data = maybe_unserialize(get_post_meta($order->ID, '_sunshine_order_data', true));
+			$order_items = maybe_unserialize(get_post_meta($order->ID, '_sunshine_order_items', true));
+
+			$order_status = wp_get_post_terms($order->ID, 'orderroes_status');
+			// let the action set the status back and forth for now
+			if (!empty($order_status) && $order_status[0]->slug == 'pending') {
+				$order_xml = new SimpleXMLElement("<order></order>");
+				// die(var_dump($order_data));
+				$order_xml->addAttribute('OrderNumber', $order->ID);
+				$order_xml->addAttribute('customernumber', $order_data['user_id']);
+				$order_xml->addAttribute('orbvendorid', 'test');
+				$order_xml->addAttribute('orbvendorpassword', 'test');
+				$order_xml->addAttribute('labid', 'test');
+				$order_xml->addAttribute('producttotal', $order_data['subtotal']);
+				$order_xml->addAttribute('shippingtotal', $order_data['shipping_cost']);
+				$order_xml->addAttribute('taxtotal', $order_data['tax']);
+				$order_xml->addAttribute('totalprice', $order_data['total']);
+
+				$customer_xml = $order_xml->addChild('customer');
+				$customer_xml->addChild('firstname', $order_data['first_name']);
+				$customer_xml->addChild('lastname', $order_data['last_name']);
+				$customer_xml->addChild('email', $order_data['email']);
+
+				$shipping_xml = $order_xml->addChild('shippingaddress');
+				$shipping_xml->addChild('firstname', $order_data['shipping_first_name']);
+				$shipping_xml->addChild('lastname', $order_data['shipping_last_name']);
+				$shipping_xml->addChild('address1', $order_data['shipping_address']);
+				$shipping_xml->addChild('address2', $order_data['shipping_address2']);
+				$shipping_xml->addChild('city', $order_data['shipping_city']);
+				$shipping_xml->addChild('state', $order_data['shipping_state']);
+				$shipping_xml->addChild('zip', $order_data['shipping_zip']);
+				$shipping_xml->addChild('countrycode', $order_data['shipping_country']);
+				$shipping_xml->addChild('phone', $order_data['phone']);
+				$shipping_xml->addChild('email', $order_data['email']);
+				$order_xml->addChild('shippingmethod', $order_data['shipping_method']);
+
+				// die(var_dump($order_xml->asXML()));
+				// die(var_dump($order_xml));
+				// wp_set_post_terms($order->ID, array('name' => 'Complete'), 'orderroes_status');
+			}
+			// else if (!empty($order_status) && $order_status[0]->slug == 'complete') {
+			// 	wp_set_post_terms($order->ID, array('name' => 'Pending'), 'orderroes_status');
+			// }
+		}
 	}
 }
 
