@@ -55,7 +55,7 @@ class OrdersRoes {
 			'ROES Orders',
 			'manage_options',
 			'ordersroes',
-			array($this, 'display_settings_page'),
+			array($this, 'display_manage_page'),
 			'dashicons-layout',
 			99
 		);
@@ -64,6 +64,29 @@ class OrdersRoes {
 	public function display_manage_page()
 	{
 		include(dirname( __FILE__ ) . '/manage.php');
+	}
+
+	public static function get_orders()
+	{
+		$orders_with_meta = array();
+		$args = array(
+			'post_type' => 'sunshine-order'
+		);
+
+		$orders = get_posts($args);
+		foreach ($orders as $order) {
+			$order_meta = get_post_meta($order->ID);
+			$order->order_meta = $order_meta;
+			$sunshine_order_data = unserialize(unserialize($order->order_meta['_sunshine_order_data'][0]));
+			$sunshine_order_items = unserialize(unserialize($order->order_meta['_sunshine_order_items'][0]));
+			$order->order_meta['data'] = $sunshine_order_data;
+			$order->order_meta['items'] = $sunshine_order_items;
+			unset($order->order_meta['_sunshine_order_data']);
+			unset($order->order_meta['_sunshine_order_items']);
+			$orders_with_meta[] = $order;
+		}
+		//die(var_dump($orders_with_meta[0]->order_meta));
+		return $orders_with_meta;
 	}
 }
 
