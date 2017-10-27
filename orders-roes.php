@@ -61,9 +61,9 @@ class OrdersRoes {
 		);
 	}
 
-	public function display_settings_page()
+	public function display_manage_page()
 	{
-		include(dirname( __FILE__ ) . '/settings.php');
+		include(dirname( __FILE__ ) . '/manage.php');
 	}
 }
 
