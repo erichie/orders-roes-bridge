@@ -103,8 +103,8 @@ class OrdersRoes {
 		foreach ($orders as $order) {
 			$filtered_order = array();
 			$order_meta = get_post_meta($order->ID);
-			$order_data = unserialize(unserialize($order_meta['_sunshine_order_data'][0]));
-			$order_items = unserialize(unserialize($order_meta['_sunshine_order_items'][0]));
+			$order_data = maybe_unserialize(get_post_meta($order->ID, '_sunshine_order_data', true));
+			$order_items = maybe_unserialize(get_post_meta($order->ID, '_sunshine_order_items', true));
 			$order_terms = wp_get_post_terms($order->ID, 'sunshine-order-status');
 
 			$filtered_order = array(
@@ -118,7 +118,7 @@ class OrdersRoes {
 
 			$filtered_orders[] = $filtered_order;
 		}
-		// die(var_dump($filtered_orders));
+
 		return $filtered_orders;
 	}
 }
