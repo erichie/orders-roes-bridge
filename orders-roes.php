@@ -142,7 +142,7 @@ class OrdersRoes {
 			$order_status = wp_get_post_terms($order->ID, 'orderroes_status');
 
 			if (!empty($order_status) && $order_status[0]->slug == 'pending') {
-				$order_xml = new SimpleXMLElement("<order></order>");
+				$order_xml = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><order></order>');
 				$order_xml->addAttribute('OrderNumber', $order->ID);
 				$order_xml->addAttribute('customernumber', $order_data['user_id']);
 				$order_xml->addAttribute('orbvendorid', 'test');
@@ -188,18 +188,29 @@ class OrdersRoes {
 					$item_xml->addAttribute('totalprice', $item['total']);
 					$item_xml->addAttribute('price', $item['price']);
 
+					$layoutfile = '.txt';
+					$template_bounds = '0.0,0.0,';
 					$product = get_post($item['product_id']);
-					$test = get_post_meta($product->ID);
-					// die(var_dump($product));
+					$bounds_array = explode('x', $product->post_content);
+					$template_bounds .= $bounds_array[0] . '.0,' . $bounds_array[1] . '.0';
+					$template_xml = $item_xml->addChild('template');
+					$template_xml->addAttribute('bounds', $template_bounds);
+					$template_xml->addAttribute('label', $product->post_content);
+					$item_count++;
 				}
 
+				$totals_xml = $order_xml->addChild('totals');
+				$totals_xml->addAttribute('producttotal', $order_data['subtotal']);
+				$totals_xml->addAttribute('orderoptionstotal', '0.00');
+				$totals_xml->addAttribute('shippingtotal', $order_data['shipping_cost']);
+				$totals_xml->addAttribute('taxtotal', $order_data['tax']);
+				$totals_xml->addAttribute('totalprice', $order_data['total']);
+
 				// die(var_dump($order_xml->asXML()));
-				// die(var_dump($order_xml));
+				$response = wp_remote_post('http://www.roesorb.com/OpenROESBridge/OpenROESBridgeServlet', array('headers' => array('Content-type' => 'application/octet-stream'), 'body' => $order_xml->asXML()));
+				die(var_dump($response));
 				// wp_set_post_terms($order->ID, array('name' => 'Complete'), 'orderroes_status');
 			}
-			// else if (!empty($order_status) && $order_status[0]->slug == 'complete') {
-			// 	wp_set_post_terms($order->ID, array('name' => 'Pending'), 'orderroes_status');
-			// }
 		}
 	}
 }
