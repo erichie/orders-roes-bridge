@@ -140,10 +140,9 @@ class OrdersRoes {
 			$order_items = maybe_unserialize(get_post_meta($order->ID, '_sunshine_order_items', true));
 
 			$order_status = wp_get_post_terms($order->ID, 'orderroes_status');
-			// let the action set the status back and forth for now
+
 			if (!empty($order_status) && $order_status[0]->slug == 'pending') {
 				$order_xml = new SimpleXMLElement("<order></order>");
-				// die(var_dump($order_data));
 				$order_xml->addAttribute('OrderNumber', $order->ID);
 				$order_xml->addAttribute('customernumber', $order_data['user_id']);
 				$order_xml->addAttribute('orbvendorid', 'test');
@@ -171,6 +170,28 @@ class OrdersRoes {
 				$shipping_xml->addChild('phone', $order_data['phone']);
 				$shipping_xml->addChild('email', $order_data['email']);
 				$order_xml->addChild('shippingmethod', $order_data['shipping_method']);
+
+				$item_count = 1;
+				foreach ($order_items as $item) {
+					$image_xml = $order_xml->addChild('image');
+					$image_xml->addAttribute('id', $item['image_id']);
+					$image_url = wp_get_attachment_url($item['image_id']);
+					$image_meta = wp_get_attachment_metadata($item['image_id']);
+					$image_xml->addAttribute('url', $image_url);
+					$image_xml->addAttribute('height', $image_meta['height']);
+					$image_xml->addAttribute('width', $image_meta['width']);
+					$image_xml->addAttribute('filename', $item['image_name']);
+
+					$item_xml = $order_xml->addChild('item');
+					$item_xml->addAttribute('id', $item_count);
+					$item_xml->addAttribute('quantity', $item['qty']);
+					$item_xml->addAttribute('totalprice', $item['total']);
+					$item_xml->addAttribute('price', $item['price']);
+
+					$product = get_post($item['product_id']);
+					$test = get_post_meta($product->ID);
+					// die(var_dump($product));
+				}
 
 				// die(var_dump($order_xml->asXML()));
 				// die(var_dump($order_xml));
