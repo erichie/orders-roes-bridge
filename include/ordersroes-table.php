@@ -22,8 +22,9 @@ class OrdersRoes_Table extends WP_List_Table {
 		return isset($item[$column_name]) ? esc_html($item[$column_name]) : '';
 	}
 
-	function prepare_items($orders)
+	function prepare_items()
 	{
+		$orders = OrdersRoes::get_orders();
 		$columns = $this->get_columns();
 		$this->_column_headers = array($columns, array(), array());
 		$this->items = $orders;
